@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { Check, ChevronDown, Download, Heart, RefreshCw, Settings2, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const NAV_ITEMS = [
@@ -18,7 +19,20 @@ const HERO_IMAGES = {
 
 const STYLE_OPTIONS = ['Anime', 'Pixar', 'Sketch', 'Comic', '3D Cartoon'];
 const ASPECT_OPTIONS = ['1:1', '4:3', '16:9'];
-const QUALITY_OPTIONS = ['Standard', 'HD (2k)', 'Ultra (4k)'];
+const QUALITY_OPTIONS = [
+  {
+    value: 'Standard',
+    hint: 'Fast concept render',
+  },
+  {
+    value: 'HD (2k)',
+    hint: 'Balanced detail and speed',
+  },
+  {
+    value: 'Ultra (4k)',
+    hint: 'Maximum polish and export depth',
+  },
+];
 const GALLERY_FILTERS = ['All Styles', 'Anime', '3D Pixar', 'Pencil Sketch', 'Cyberpunk', 'Watercolor'];
 const FOOTER_LINKS = ['Privacy Policy', 'Terms of Service', 'Contact', 'Twitter', 'Discord'];
 
@@ -153,6 +167,8 @@ const PRICING_PLANS = [
 const DEFAULT_PROMPT =
   'Describe your cartoon character, scene, or action... (e.g., "A cyberpunk kitten exploring a neon marketplace, vibrant colors, soft lighting")';
 
+const CARD_VARIATION_POOL = [...GENERATION_LIBRARY, ...GALLERY_LIBRARY];
+
 function getInitialView() {
   if (typeof window === 'undefined') {
     return 'home';
@@ -187,6 +203,99 @@ function getAspectClass(aspect) {
   }
 }
 
+function normalizeCardFamily(card) {
+  if (card.category) {
+    return card.category;
+  }
+
+  if (card.style === 'Pixar' || card.style === '3D Cartoon') {
+    return '3D Pixar';
+  }
+
+  if (card.style === 'Sketch') {
+    return 'Pencil Sketch';
+  }
+
+  if (card.style === 'Comic') {
+    return 'Cyberpunk';
+  }
+
+  return card.style;
+}
+
+function getNextCardVariant(card) {
+  const family = normalizeCardFamily(card);
+  const variants = CARD_VARIATION_POOL.filter((candidate) => normalizeCardFamily(candidate) === family);
+
+  if (!variants.length) {
+    return card;
+  }
+
+  const currentIndex = variants.findIndex((candidate) => candidate.image === card.image);
+  const nextVariant = variants[(currentIndex + 1 + variants.length) % variants.length] || variants[0];
+
+  return {
+    ...card,
+    image: nextVariant.image,
+    aspect: nextVariant.aspect || card.aspect,
+  };
+}
+
+function sanitizeFilename(value) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
+function getExtensionFromMimeType(type) {
+  const normalized = type?.toLowerCase() || '';
+
+  if (normalized.includes('png')) return 'png';
+  if (normalized.includes('webp')) return 'webp';
+  if (normalized.includes('gif')) return 'gif';
+  if (normalized.includes('bmp')) return 'bmp';
+  if (normalized.includes('svg')) return 'svg';
+  if (normalized.includes('jpeg') || normalized.includes('jpg')) return 'jpg';
+
+  return 'jpg';
+}
+
+function triggerDownload(url, filename) {
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
+async function downloadImageToDevice(imageUrl, title) {
+  const safeBaseName = sanitizeFilename(title || 'ai-cartoon') || 'ai-cartoon';
+
+  try {
+    const response = await fetch(imageUrl, { mode: 'cors' });
+
+    if (!response.ok) {
+      throw new Error('Download request failed');
+    }
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const extension = getExtensionFromMimeType(blob.type);
+
+    triggerDownload(objectUrl, `${safeBaseName}.${extension}`);
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    return true;
+  } catch (error) {
+    const extension = getExtensionFromMimeType('');
+    triggerDownload(imageUrl, `${safeBaseName}.${extension}`);
+    return false;
+  }
+}
+
 function MaterialIcon({ name, className = '', fill = false }) {
   return (
     <span
@@ -204,19 +313,177 @@ function MaterialIcon({ name, className = '', fill = false }) {
   );
 }
 
+function CardActionButton({
+  icon: Icon,
+  label,
+  onClick,
+  tone = 'neutral',
+  active = false,
+  loading = false,
+}) {
+  const toneClasses = {
+    download: active
+      ? 'border-primary/60 bg-primary text-on-primary shadow-lg shadow-primary/25'
+      : 'border-white/12 bg-white/12 text-white hover:border-primary/40 hover:bg-primary/85',
+    refresh: active
+      ? 'border-secondary/60 bg-secondary text-on-secondary shadow-lg shadow-secondary/20'
+      : 'border-white/12 bg-surface/45 text-white hover:border-secondary/40 hover:bg-secondary/80',
+    favorite: active
+      ? 'border-tertiary/60 bg-tertiary text-on-tertiary shadow-lg shadow-tertiary/25'
+      : 'border-white/12 bg-white/12 text-white hover:border-tertiary/40 hover:bg-tertiary/80',
+    neutral: 'border-white/12 bg-white/12 text-white hover:border-primary/40 hover:bg-primary/85',
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2.5 text-[0.8rem] font-semibold tracking-tight backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 ${toneClasses[tone]}`}
+    >
+      <Icon
+        className={`h-4 w-4 ${loading ? 'animate-spin' : ''} ${active && tone === 'favorite' ? 'fill-current' : ''}`}
+        strokeWidth={2.1}
+      />
+      <span className="leading-none">{label}</span>
+    </button>
+  );
+}
+
+function StudioSelect({ value, onChange, options }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+  const selectedOption = options.find((option) => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    function handleOutsidePointer(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsidePointer);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsidePointer);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="group relative w-full overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 py-3.5 text-left shadow-[0_16px_32px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-200 hover:border-primary/35 hover:shadow-[0_18px_36px_rgba(205,189,255,0.14)]"
+      >
+        <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_38%),linear-gradient(120deg,rgba(205,189,255,0.06),transparent_58%)] opacity-90" />
+
+        <span className="relative flex items-center justify-between gap-3">
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-extrabold text-on-surface">
+              {selectedOption.value}
+            </span>
+            <span className="mt-1 block truncate text-[0.62rem] font-bold uppercase tracking-[0.18em] text-on-surface-variant/55">
+              {selectedOption.hint}
+            </span>
+          </span>
+
+          <span
+            className={`flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/6 text-on-surface-variant/65 transition-all duration-200 ${
+              open
+                ? 'rotate-180 border-primary/30 bg-primary/12 text-primary'
+                : 'group-hover:border-white/18 group-hover:bg-white/10 group-hover:text-white'
+            }`}
+          >
+            <MaterialIcon name="expand_more" className="text-xl" />
+          </span>
+        </span>
+      </button>
+
+      {open ? (
+        <div className="absolute left-0 right-0 top-[calc(100%+0.7rem)] z-30 overflow-hidden rounded-[1.55rem] border border-white/12 bg-[linear-gradient(180deg,rgba(40,36,52,0.96),rgba(28,25,36,0.94))] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.38),0_0_40px_rgba(205,189,255,0.12)] backdrop-blur-2xl">
+          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+          <div className="mb-1 px-3 pt-2 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-tertiary/90">
+            Render Quality
+          </div>
+
+          <div className="space-y-1">
+            {options.map((option) => {
+              const active = option.value === value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  onClick={() => {
+                    onChange(option.value);
+                    setOpen(false);
+                  }}
+                  className={`group flex w-full items-center justify-between rounded-[1.15rem] px-3.5 py-3 text-left transition-all duration-200 ${
+                    active
+                      ? 'bg-gradient-to-r from-primary/24 via-primary/14 to-secondary/12 text-white shadow-[0_10px_28px_rgba(205,189,255,0.12)]'
+                      : 'text-on-surface-variant hover:bg-white/7 hover:text-white'
+                  }`}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold">{option.value}</span>
+                    <span
+                      className={`mt-1 block truncate text-[0.72rem] ${
+                        active
+                          ? 'text-white/72'
+                          : 'text-on-surface-variant/55 group-hover:text-white/62'
+                      }`}
+                    >
+                      {option.hint}
+                    </span>
+                  </span>
+
+                  <span
+                    className={`ml-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
+                      active
+                        ? 'border-primary/38 bg-primary/16 text-primary'
+                        : 'border-white/8 bg-white/5 text-transparent group-hover:border-white/15 group-hover:text-white/60'
+                    }`}
+                  >
+                    <Check className="h-4 w-4" strokeWidth={2.4} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function TopNavigation({ activeView, navigate }) {
   return (
-    <nav className="top-header-glass fixed inset-x-0 top-0 z-50">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 md:px-8">
-        <button
-          type="button"
-          onClick={() => navigate('home')}
-          className="font-headline text-lg font-bold tracking-[-0.04em] text-primary"
-        >
-          AI Cartoon Generator
-        </button>
+        <nav className="top-header-glass fixed inset-x-0 top-0 z-50">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 md:px-8">
+            <button
+              type="button"
+              onClick={() => navigate('home')}
+              className="top-brand"
+            >
+              <span className="top-brand-mark" aria-hidden="true">
+                <Sparkles className="top-brand-icon" strokeWidth={2.35} />
+              </span>
+              <span className="top-brand-title">AI Cartoon Generator</span>
+            </button>
 
-        <div className="hidden items-center gap-8 md:flex">
+          <div className="hidden items-center gap-8 md:flex">
           {NAV_ITEMS.map((item) => {
             const isActive = item.id === activeView;
 
@@ -225,10 +492,8 @@ function TopNavigation({ activeView, navigate }) {
                 key={item.id}
                 type="button"
                 onClick={() => navigate(item.id)}
-                className={`border-b-2 pb-1 font-headline text-sm font-semibold tracking-tight transition-colors duration-300 ${
-                  isActive
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-on-surface-variant/70 hover:text-tertiary'
+                className={`top-nav-link font-headline text-sm font-semibold tracking-tight ${
+                  isActive ? 'top-nav-link--active' : ''
                 }`}
               >
                 {item.label}
@@ -238,16 +503,13 @@ function TopNavigation({ activeView, navigate }) {
         </div>
 
         <div className="flex items-center gap-3 md:gap-4">
-          <button
-            type="button"
-            className="text-sm font-semibold text-on-surface-variant/70 transition-colors hover:text-tertiary"
-          >
+          <button type="button" className="top-nav-ghost text-sm font-semibold">
             Login
           </button>
           <button
             type="button"
             onClick={() => navigate('pricing')}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-on-primary transition-transform hover:scale-105"
+            className="top-nav-cta rounded-full px-5 py-2 text-sm font-bold"
           >
             Sign Up
           </button>
@@ -465,8 +727,15 @@ function GenerateView({
   seed,
   setSeed,
   generationCards,
+  favoriteCardIds,
+  downloadingCardId,
+  downloadedCardId,
+  refreshingCardId,
   isGenerating,
   onGenerate,
+  onDownloadCard,
+  onRefreshCard,
+  onToggleFavorite,
 }) {
   return (
     <main className="mx-auto max-w-7xl px-6 pb-24 pt-28 md:px-8 md:pb-32">
@@ -553,15 +822,11 @@ function GenerateView({
                   <label className="block text-sm font-bold uppercase tracking-[0.2em] text-tertiary">
                     Quality
                   </label>
-                  <select
+                  <StudioSelect
                     value={selectedQuality}
-                    onChange={(event) => setSelectedQuality(event.target.value)}
-                    className="w-full rounded-lg border-none bg-surface-container-highest px-3 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/30"
-                  >
-                    {QUALITY_OPTIONS.map((option) => (
-                      <option key={option}>{option}</option>
-                    ))}
-                  </select>
+                    onChange={setSelectedQuality}
+                    options={QUALITY_OPTIONS}
+                  />
                 </div>
               </div>
 
@@ -653,19 +918,33 @@ function GenerateView({
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">{card.style}</p>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-2">
-                      <button type="button" className="rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition-colors hover:bg-primary">
-                        <MaterialIcon name="download" className="text-xl" />
-                      </button>
-                      <button type="button" className="rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition-colors hover:bg-primary">
-                        <MaterialIcon name="refresh" className="text-xl" />
-                      </button>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap gap-2">
+                      <CardActionButton
+                        icon={downloadedCardId === card.id ? Check : Download}
+                        label={downloadedCardId === card.id ? 'Saved' : 'Download'}
+                        tone="download"
+                        active={downloadedCardId === card.id}
+                        loading={downloadingCardId === card.id}
+                        onClick={() => onDownloadCard(card)}
+                      />
+                      <CardActionButton
+                        icon={RefreshCw}
+                        label="Refresh"
+                        tone="refresh"
+                        active={refreshingCardId === card.id}
+                        loading={refreshingCardId === card.id}
+                        onClick={() => onRefreshCard(card.id)}
+                      />
                     </div>
 
-                    <button type="button" className="rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition-colors hover:bg-tertiary">
-                      <MaterialIcon name="favorite" fill className="text-xl" />
-                    </button>
+                    <CardActionButton
+                      icon={Heart}
+                      label={favoriteCardIds.includes(card.id) ? 'Favorited' : 'Favorite'}
+                      tone="favorite"
+                      active={favoriteCardIds.includes(card.id)}
+                      onClick={() => onToggleFavorite(card.id)}
+                    />
                   </div>
                 </div>
               </div>
@@ -677,7 +956,16 @@ function GenerateView({
   );
 }
 
-function GalleryView({ galleryFilter, setGalleryFilter, galleryCards, navigate }) {
+function GalleryView({
+  galleryFilter,
+  setGalleryFilter,
+  galleryCards,
+  favoriteCardIds,
+  downloadingCardId,
+  downloadedCardId,
+  navigate,
+  onDownloadCard,
+}) {
   const filteredCards =
     galleryFilter === 'All Styles'
       ? galleryCards
@@ -750,9 +1038,23 @@ function GalleryView({ galleryFilter, setGalleryFilter, galleryCards, navigate }
                   </span>
                 </div>
 
-                <button type="button" className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-primary">
-                  <MaterialIcon name="download" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {favoriteCardIds.includes(card.id) ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-tertiary/40 bg-tertiary/85 px-3 py-2 text-[0.72rem] font-semibold text-on-tertiary backdrop-blur-xl">
+                      <Heart className="h-3.5 w-3.5 fill-current" strokeWidth={2.2} />
+                      Saved
+                    </span>
+                  ) : null}
+
+                  <CardActionButton
+                    icon={downloadedCardId === card.id ? Check : Download}
+                    label={downloadedCardId === card.id ? 'Saved' : 'Download'}
+                    tone="download"
+                    active={downloadedCardId === card.id}
+                    loading={downloadingCardId === card.id}
+                    onClick={() => onDownloadCard(card)}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1068,9 +1370,15 @@ function HomePage() {
   const [generationCards, setGenerationCards] = useState(GENERATION_LIBRARY);
   const [galleryCards, setGalleryCards] = useState(GALLERY_LIBRARY);
   const [galleryFilter, setGalleryFilter] = useState('All Styles');
+  const [favoriteCardIds, setFavoriteCardIds] = useState([]);
+  const [downloadingCardId, setDownloadingCardId] = useState(null);
+  const [downloadedCardId, setDownloadedCardId] = useState(null);
+  const [refreshingCardId, setRefreshingCardId] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const generationTimeoutRef = useRef(null);
   const generationCounterRef = useRef(0);
+  const downloadedResetRef = useRef(null);
+  const refreshingResetRef = useRef(null);
 
   useEffect(() => {
     function handleHashChange() {
@@ -1089,6 +1397,14 @@ function HomePage() {
 
       if (generationTimeoutRef.current) {
         window.clearTimeout(generationTimeoutRef.current);
+      }
+
+      if (downloadedResetRef.current) {
+        window.clearTimeout(downloadedResetRef.current);
+      }
+
+      if (refreshingResetRef.current) {
+        window.clearTimeout(refreshingResetRef.current);
       }
     };
   }, []);
@@ -1145,6 +1461,48 @@ function HomePage() {
     }, 900);
   }
 
+  function toggleFavorite(cardId) {
+    setFavoriteCardIds((currentIds) =>
+      currentIds.includes(cardId)
+        ? currentIds.filter((id) => id !== cardId)
+        : [...currentIds, cardId],
+    );
+  }
+
+  async function handleDownloadCard(card) {
+    setDownloadingCardId(card.id);
+    await downloadImageToDevice(card.image, card.title);
+    setDownloadingCardId(null);
+    setDownloadedCardId(card.id);
+
+    if (downloadedResetRef.current) {
+      window.clearTimeout(downloadedResetRef.current);
+    }
+
+    downloadedResetRef.current = window.setTimeout(() => {
+      setDownloadedCardId(null);
+    }, 1800);
+  }
+
+  function handleRefreshCard(cardId) {
+    setRefreshingCardId(cardId);
+
+    setGenerationCards((currentCards) =>
+      currentCards.map((card) => (card.id === cardId ? getNextCardVariant(card) : card)),
+    );
+    setGalleryCards((currentCards) =>
+      currentCards.map((card) => (card.id === cardId ? getNextCardVariant(card) : card)),
+    );
+
+    if (refreshingResetRef.current) {
+      window.clearTimeout(refreshingResetRef.current);
+    }
+
+    refreshingResetRef.current = window.setTimeout(() => {
+      setRefreshingCardId(null);
+    }, 550);
+  }
+
   return (
     <div className="page-shell pb-24 md:pb-0">
       <TopNavigation activeView={activeView} navigate={navigate} />
@@ -1175,8 +1533,15 @@ function HomePage() {
               seed={seed}
               setSeed={setSeed}
               generationCards={generationCards}
+              favoriteCardIds={favoriteCardIds}
+              downloadingCardId={downloadingCardId}
+              downloadedCardId={downloadedCardId}
+              refreshingCardId={refreshingCardId}
               isGenerating={isGenerating}
               onGenerate={handleGenerate}
+              onDownloadCard={handleDownloadCard}
+              onRefreshCard={handleRefreshCard}
+              onToggleFavorite={toggleFavorite}
             />
           ) : null}
 
@@ -1185,7 +1550,11 @@ function HomePage() {
               galleryFilter={galleryFilter}
               setGalleryFilter={setGalleryFilter}
               galleryCards={galleryCards}
+              favoriteCardIds={favoriteCardIds}
+              downloadingCardId={downloadingCardId}
+              downloadedCardId={downloadedCardId}
               navigate={navigate}
+              onDownloadCard={handleDownloadCard}
             />
           ) : null}
 
