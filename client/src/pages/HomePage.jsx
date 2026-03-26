@@ -1,5 +1,23 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ChevronDown, Download, Heart, RefreshCw, Settings2, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  Compass,
+  Download,
+  Heart,
+  House,
+  Images,
+  LayoutGrid,
+  Palette,
+  RefreshCw,
+  Rocket,
+  Rows3,
+  Sparkles,
+  Upload,
+  User,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const NAV_ITEMS = [
@@ -22,16 +40,20 @@ const ASPECT_OPTIONS = ['1:1', '4:3', '16:9'];
 const QUALITY_OPTIONS = [
   {
     value: 'Standard',
-    hint: 'Fast concept render',
+    hint: 'Fast creative draft',
   },
   {
     value: 'HD (2k)',
-    hint: 'Balanced detail and speed',
+    hint: 'Sharper detail balance',
   },
   {
     value: 'Ultra (4k)',
-    hint: 'Maximum polish and export depth',
+    hint: 'Max polish and detail',
   },
+];
+const CREATION_VIEW_OPTIONS = [
+  { id: 'list', label: 'List', icon: Rows3 },
+  { id: 'grid', label: 'Grid', icon: LayoutGrid },
 ];
 const GALLERY_FILTERS = ['All Styles', 'Anime', '3D Pixar', 'Pencil Sketch', 'Cyberpunk', 'Watercolor'];
 const FOOTER_LINKS = ['Privacy Policy', 'Terms of Service', 'Contact', 'Twitter', 'Discord'];
@@ -383,87 +405,87 @@ function StudioSelect({ value, onChange, options }) {
         onClick={() => setOpen((current) => !current)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="group relative w-full overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 py-3.5 text-left shadow-[0_16px_32px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-200 hover:border-primary/35 hover:shadow-[0_18px_36px_rgba(205,189,255,0.14)]"
+        className={`studio-select-trigger group w-full text-left ${open ? 'studio-select-trigger--open' : ''}`}
       >
-        <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_38%),linear-gradient(120deg,rgba(205,189,255,0.06),transparent_58%)] opacity-90" />
-
         <span className="relative flex items-center justify-between gap-3">
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-extrabold text-on-surface">
+          <span className="min-w-0 pr-2">
+            <span className="studio-select-trigger__value">
               {selectedOption.value}
             </span>
-            <span className="mt-1 block truncate text-[0.62rem] font-bold uppercase tracking-[0.18em] text-on-surface-variant/55">
+            <span className="studio-select-trigger__hint">
               {selectedOption.hint}
             </span>
           </span>
 
-          <span
-            className={`flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/6 text-on-surface-variant/65 transition-all duration-200 ${
-              open
-                ? 'rotate-180 border-primary/30 bg-primary/12 text-primary'
-                : 'group-hover:border-white/18 group-hover:bg-white/10 group-hover:text-white'
-            }`}
-          >
-            <MaterialIcon name="expand_more" className="text-xl" />
+          <span className={`studio-select-caret ${open ? 'studio-select-caret--open' : ''}`}>
+            <ChevronDown className="h-4.5 w-4.5" strokeWidth={2.3} />
           </span>
         </span>
       </button>
 
-      {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+0.7rem)] z-30 overflow-hidden rounded-[1.55rem] border border-white/12 bg-[linear-gradient(180deg,rgba(40,36,52,0.96),rgba(28,25,36,0.94))] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.38),0_0_40px_rgba(205,189,255,0.12)] backdrop-blur-2xl">
-          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-          <div className="mb-1 px-3 pt-2 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-tertiary/90">
-            Render Quality
-          </div>
+      <AnimatePresence>
+        {open ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="absolute left-0 right-0 top-[calc(100%+0.7rem)] z-30 overflow-hidden rounded-[1.55rem] border border-white/12 bg-[linear-gradient(180deg,rgba(40,36,52,0.96),rgba(28,25,36,0.94))] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.38),0_0_40px_rgba(205,189,255,0.12)] backdrop-blur-2xl"
+          >
+            <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+            <div className="mb-1 px-3 pt-2 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-tertiary/90">
+              Render Quality
+            </div>
 
-          <div className="space-y-1">
-            {options.map((option) => {
-              const active = option.value === value;
+            <div className="space-y-1">
+              {options.map((option) => {
+                const active = option.value === value;
 
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="option"
-                  aria-selected={active}
-                  onClick={() => {
-                    onChange(option.value);
-                    setOpen(false);
-                  }}
-                  className={`group flex w-full items-center justify-between rounded-[1.15rem] px-3.5 py-3 text-left transition-all duration-200 ${
-                    active
-                      ? 'bg-gradient-to-r from-primary/24 via-primary/14 to-secondary/12 text-white shadow-[0_10px_28px_rgba(205,189,255,0.12)]'
-                      : 'text-on-surface-variant hover:bg-white/7 hover:text-white'
-                  }`}
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-bold">{option.value}</span>
-                    <span
-                      className={`mt-1 block truncate text-[0.72rem] ${
-                        active
-                          ? 'text-white/72'
-                          : 'text-on-surface-variant/55 group-hover:text-white/62'
-                      }`}
-                    >
-                      {option.hint}
-                    </span>
-                  </span>
-
-                  <span
-                    className={`ml-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => {
+                      onChange(option.value);
+                      setOpen(false);
+                    }}
+                    className={`group flex w-full items-center justify-between rounded-[1.15rem] px-3.5 py-3 text-left transition-all duration-200 ${
                       active
-                        ? 'border-primary/38 bg-primary/16 text-primary'
-                        : 'border-white/8 bg-white/5 text-transparent group-hover:border-white/15 group-hover:text-white/60'
+                        ? 'bg-gradient-to-r from-primary/26 via-primary/14 to-secondary/12 text-white shadow-[0_12px_28px_rgba(205,189,255,0.16)]'
+                        : 'text-on-surface-variant hover:bg-white/7 hover:text-white hover:shadow-[0_10px_24px_rgba(255,255,255,0.04)]'
                     }`}
                   >
-                    <Check className="h-4 w-4" strokeWidth={2.4} />
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-bold">{option.value}</span>
+                      <span
+                        className={`mt-1 block truncate text-[0.72rem] ${
+                          active
+                            ? 'text-white/72'
+                            : 'text-on-surface-variant/55 group-hover:text-white/62'
+                        }`}
+                      >
+                        {option.hint}
+                      </span>
+                    </span>
+
+                    <span
+                      className={`ml-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
+                        active
+                          ? 'border-primary/38 bg-primary/16 text-primary'
+                          : 'border-white/8 bg-white/5 text-transparent group-hover:border-white/15 group-hover:text-white/60'
+                      }`}
+                    >
+                      <Check className="h-4 w-4" strokeWidth={2.4} />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
@@ -478,7 +500,16 @@ function TopNavigation({ activeView, navigate }) {
               className="top-brand"
             >
               <span className="top-brand-mark" aria-hidden="true">
-                <Sparkles className="top-brand-icon" strokeWidth={2.35} />
+                <video
+                  className="top-brand-mark-video"
+                  src="/brand-icon-live.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  disablePictureInPicture
+                />
               </span>
               <span className="top-brand-title">AI Cartoon Generator</span>
             </button>
@@ -525,7 +556,7 @@ function HomeView({ navigate }) {
       <section className="hero-gradient relative flex min-h-[860px] flex-col items-center justify-center px-6 pb-14 md:min-h-[920px]">
         <div className="relative z-10 max-w-4xl text-center">
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-outline-variant/20 bg-surface-container-highest/50 px-4 py-1.5">
-            <MaterialIcon name="auto_awesome" fill className="text-lg text-tertiary" />
+            <Sparkles className="h-[1.05rem] w-[1.05rem] text-tertiary" strokeWidth={2.2} />
             <span className="text-xs font-bold uppercase tracking-[0.24em] text-tertiary">
               v2.0 Beta Now Live
             </span>
@@ -549,7 +580,7 @@ function HomeView({ navigate }) {
               className="btn-glow flex w-full items-center justify-center gap-3 rounded-full bg-gradient-to-r from-primary to-primary-container px-10 py-5 text-lg font-black text-on-primary transition-all hover:scale-105 active:scale-95 sm:w-auto"
             >
               Generate Now
-              <MaterialIcon name="rocket_launch" className="text-xl" />
+              <Rocket className="h-5 w-5" strokeWidth={2.3} />
             </button>
 
             <button
@@ -558,7 +589,7 @@ function HomeView({ navigate }) {
               className="glass-panel flex w-full items-center justify-center gap-3 rounded-full px-10 py-5 text-lg font-bold text-on-surface transition-colors hover:bg-surface-container-high sm:w-auto"
             >
               View Gallery
-              <MaterialIcon name="explore" className="text-xl" />
+              <Compass className="h-5 w-5" strokeWidth={2.2} />
             </button>
           </div>
         </div>
@@ -604,7 +635,7 @@ function HomeView({ navigate }) {
             <div className="flex flex-col items-start gap-10 md:flex-row md:items-center">
               <div className="flex-1 space-y-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-[1.75rem] bg-primary/10 text-primary">
-                  <MaterialIcon name="auto_fix_high" fill className="text-3xl" />
+                  <Sparkles className="h-7 w-7" strokeWidth={2.15} />
                 </div>
                 <h3 className="text-2xl font-bold text-on-surface">AI-powered generation</h3>
                 <p className="leading-relaxed text-on-surface-variant">
@@ -614,10 +645,10 @@ function HomeView({ navigate }) {
                 <button
                   type="button"
                   onClick={() => navigate('generate')}
-                  className="inline-flex items-center gap-2 pt-4 font-bold text-secondary transition-all hover:gap-4"
+                  className="group inline-flex items-center gap-2 pt-4 font-bold text-secondary transition-all hover:gap-4"
                 >
                   Learn about the Engine
-                  <MaterialIcon name="arrow_forward" />
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" strokeWidth={2.3} />
                 </button>
               </div>
 
@@ -630,7 +661,7 @@ function HomeView({ navigate }) {
           <div className="glass-panel rounded-xl p-10 transition-colors hover:bg-surface-container-high/60">
             <div className="space-y-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-[1.75rem] bg-secondary/10 text-secondary">
-                <MaterialIcon name="palette" fill className="text-3xl" />
+                <Palette className="h-7 w-7" strokeWidth={2.1} />
               </div>
               <h3 className="text-2xl font-bold text-on-surface">Multiple styles</h3>
               <p className="leading-relaxed text-on-surface-variant">
@@ -650,7 +681,7 @@ function HomeView({ navigate }) {
           <div className="glass-panel rounded-xl p-10 transition-colors hover:bg-surface-container-high/60">
             <div className="space-y-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-[1.75rem] bg-tertiary/10 text-tertiary">
-                <MaterialIcon name="bolt" fill className="text-3xl" />
+                <Zap className="h-7 w-7" strokeWidth={2.1} />
               </div>
               <h3 className="text-2xl font-bold text-on-surface">Fast rendering</h3>
               <p className="leading-relaxed text-on-surface-variant">
@@ -668,7 +699,7 @@ function HomeView({ navigate }) {
             <div className="flex flex-col md:flex-row">
               <div className="flex flex-1 flex-col justify-center space-y-4 p-10">
                 <div className="flex h-14 w-14 items-center justify-center rounded-[1.75rem] bg-white/5 text-on-surface">
-                  <MaterialIcon name="cloud_upload" fill className="text-3xl" />
+                  <Upload className="h-7 w-7" strokeWidth={2.15} />
                 </div>
                 <h3 className="text-2xl font-bold text-on-surface">Import &amp; Evolve</h3>
                 <p className="leading-relaxed text-on-surface-variant">
@@ -727,6 +758,8 @@ function GenerateView({
   seed,
   setSeed,
   generationCards,
+  creationViewMode,
+  setCreationViewMode,
   favoriteCardIds,
   downloadingCardId,
   downloadedCardId,
@@ -831,12 +864,8 @@ function GenerateView({
               </div>
 
               <details className="group">
-                <summary className="flex cursor-pointer list-none items-center justify-between py-2 text-sm font-bold uppercase tracking-[0.2em] text-on-surface-variant transition-colors hover:text-primary">
+                <summary className="cursor-pointer list-none py-2 text-sm font-bold uppercase tracking-[0.2em] text-on-surface-variant transition-colors hover:text-primary">
                   <span>Advanced Settings</span>
-                  <MaterialIcon
-                    name="expand_more"
-                    className="transition-transform group-open:rotate-180"
-                  />
                 </summary>
 
                 <div className="mt-2 space-y-4 border-t border-outline-variant/15 pt-4">
@@ -878,14 +907,10 @@ function GenerateView({
             type="button"
             onClick={onGenerate}
             disabled={isGenerating}
-            className="btn-glow flex w-full items-center justify-center gap-3 rounded-full bg-gradient-to-r from-primary to-primary-container py-6 font-headline text-xl font-black uppercase tracking-[0.28em] text-on-primary transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-progress disabled:opacity-80"
+            className="btn-glow flex w-full items-center justify-center gap-3 rounded-full bg-gradient-to-r from-primary to-primary-container py-6 font-headline text-[1.08rem] font-black uppercase tracking-[0.18em] text-on-primary transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-progress disabled:opacity-80 sm:text-[1.18rem]"
           >
-            <MaterialIcon
-              name="auto_awesome"
-              fill
-              className={`text-2xl ${isGenerating ? 'animate-pulse' : ''}`}
-            />
-            {isGenerating ? 'Generating...' : 'Generate Art'}
+            <Sparkles className={`h-5 w-5 shrink-0 ${isGenerating ? 'animate-pulse' : ''}`} strokeWidth={2.35} />
+            <span className="whitespace-nowrap">{isGenerating ? 'Generating...' : 'Generate Art'}</span>
           </button>
         </div>
 
@@ -893,16 +918,27 @@ function GenerateView({
           <div className="flex items-center justify-between border-b border-outline-variant/15 pb-4">
             <h2 className="text-2xl font-bold text-on-surface">Your Creations</h2>
             <div className="flex gap-2">
-              <button type="button" className="rounded-full p-2 text-on-surface-variant hover:bg-surface-container">
-                <MaterialIcon name="filter_list" />
-              </button>
-              <button type="button" className="rounded-full p-2 text-on-surface-variant hover:bg-surface-container">
-                <MaterialIcon name="grid_view" />
-              </button>
+              {CREATION_VIEW_OPTIONS.map(({ id, label, icon: Icon }) => {
+                const active = creationViewMode === id;
+
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-label={`${label} view`}
+                    aria-pressed={active}
+                    onClick={() => setCreationViewMode(id)}
+                    className={`studio-view-toggle ${active ? 'studio-view-toggle--active' : ''}`}
+                  >
+                    <Icon className="studio-view-toggle__icon" strokeWidth={2.2} />
+                    <span className="studio-view-toggle__label">{label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className={`grid grid-cols-1 gap-8 ${creationViewMode === 'grid' ? 'md:grid-cols-2' : ''}`}>
             {generationCards.map((card) => (
               <div
                 key={card.id}
@@ -1007,15 +1043,15 @@ function GalleryView({
             );
           })}
 
-          <div className="ml-auto flex items-center gap-4">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/50">
-              Sort By
-            </span>
-            <button type="button" className="flex items-center gap-2 font-headline font-semibold text-on-surface">
-              <span>Latest</span>
-              <MaterialIcon name="expand_more" className="text-sm text-primary" />
-            </button>
-          </div>
+            <div className="ml-auto flex items-center gap-4">
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant/50">
+                Sort By
+              </span>
+              <button type="button" className="flex items-center gap-2 font-headline font-semibold text-on-surface">
+                <span>Latest</span>
+                <ChevronDown className="h-4 w-4 text-primary" strokeWidth={2.4} />
+              </button>
+            </div>
         </div>
       </section>
 
@@ -1064,7 +1100,7 @@ function GalleryView({
                 onClick={() => navigate('generate')}
                 className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-gradient-to-r from-primary via-primary-container to-primary-container px-6 py-3 font-headline text-xs font-black uppercase tracking-[0.2em] text-on-primary shadow-orb transition-transform hover:scale-105"
               >
-                <MaterialIcon name="auto_fix_high" fill className="text-base" />
+                <Sparkles className="h-4 w-4" strokeWidth={2.25} />
                 Create New Art
               </button>
             ) : null}
@@ -1089,7 +1125,7 @@ function GalleryView({
         >
           <span className="font-headline font-bold text-on-surface">Discover More Masterpieces</span>
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-on-primary transition-transform hover:translate-x-1">
-            <MaterialIcon name="arrow_forward" />
+            <ArrowRight className="h-5 w-5" strokeWidth={2.3} />
           </span>
         </button>
       </div>
@@ -1286,12 +1322,10 @@ function FloatingAction({ activeView, navigate }) {
         <button
           type="button"
           onClick={() => navigate('generate')}
-          className="glass-panel flex items-center gap-3 rounded-full px-6 py-3 shadow-[0_0_40px_rgba(93,33,223,0.2)] transition-all duration-300 hover:shadow-[0_0_60px_rgba(93,33,223,0.4)]"
+          className="flex items-center gap-4 rounded-full bg-gradient-to-r from-primary via-primary-container to-primary-container px-8 py-4 font-headline text-lg font-black text-on-primary shadow-orb transition-all hover:scale-105 active:scale-95"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-secondary text-on-primary">
-            <MaterialIcon name="add" fill className="text-xl" />
-          </span>
-          <span className="pr-2 font-headline font-black text-on-surface">Quick Start</span>
+          <Sparkles className="h-5 w-5" strokeWidth={2.25} />
+          <span>Generate New Art</span>
         </button>
       </div>
     );
@@ -1305,8 +1339,8 @@ function FloatingAction({ activeView, navigate }) {
           onClick={() => navigate('generate')}
           className="flex items-center gap-4 rounded-full bg-gradient-to-r from-primary via-primary-container to-primary-container px-8 py-4 font-headline text-lg font-black text-on-primary shadow-orb transition-all hover:scale-105 active:scale-95"
         >
-          <MaterialIcon name="auto_fix_high" fill />
-          <span>Create New Art</span>
+          <Sparkles className="h-5 w-5" strokeWidth={2.25} />
+          <span>Generate New Art</span>
         </button>
       </div>
     );
@@ -1321,7 +1355,7 @@ function FloatingAction({ activeView, navigate }) {
             onClick={() => navigate('home')}
             className="flex flex-col items-center gap-1 text-[10px] font-bold uppercase tracking-tight text-on-surface-variant/70"
           >
-            <MaterialIcon name="home" />
+            <House className="h-4 w-4" strokeWidth={2.25} />
             <span>Home</span>
           </button>
 
@@ -1330,7 +1364,7 @@ function FloatingAction({ activeView, navigate }) {
             onClick={() => navigate('generate')}
             className="flex flex-col items-center gap-1 text-[10px] font-bold uppercase tracking-tight text-primary"
           >
-            <MaterialIcon name="auto_fix_high" fill />
+            <Sparkles className="h-4 w-4" strokeWidth={2.25} />
             <span>Generate</span>
           </button>
 
@@ -1339,7 +1373,7 @@ function FloatingAction({ activeView, navigate }) {
             onClick={() => navigate('gallery')}
             className="flex flex-col items-center gap-1 text-[10px] font-bold uppercase tracking-tight text-on-surface-variant/70"
           >
-            <MaterialIcon name="photo_library" />
+            <Images className="h-4 w-4" strokeWidth={2.15} />
             <span>Gallery</span>
           </button>
 
@@ -1348,7 +1382,7 @@ function FloatingAction({ activeView, navigate }) {
             onClick={() => navigate('pricing')}
             className="flex flex-col items-center gap-1 text-[10px] font-bold uppercase tracking-tight text-on-surface-variant/70"
           >
-            <MaterialIcon name="account_circle" />
+            <User className="h-4 w-4" strokeWidth={2.2} />
             <span>Profile</span>
           </button>
         </div>
@@ -1368,6 +1402,7 @@ function HomePage() {
   const [guidanceScale, setGuidanceScale] = useState(7.5);
   const [seed, setSeed] = useState('');
   const [generationCards, setGenerationCards] = useState(GENERATION_LIBRARY);
+  const [creationViewMode, setCreationViewMode] = useState('grid');
   const [galleryCards, setGalleryCards] = useState(GALLERY_LIBRARY);
   const [galleryFilter, setGalleryFilter] = useState('All Styles');
   const [favoriteCardIds, setFavoriteCardIds] = useState([]);
@@ -1533,6 +1568,8 @@ function HomePage() {
               seed={seed}
               setSeed={setSeed}
               generationCards={generationCards}
+              creationViewMode={creationViewMode}
+              setCreationViewMode={setCreationViewMode}
               favoriteCardIds={favoriteCardIds}
               downloadingCardId={downloadingCardId}
               downloadedCardId={downloadedCardId}
