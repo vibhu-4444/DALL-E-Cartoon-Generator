@@ -48,8 +48,19 @@ app.use(errorHandler);
 async function startServer() {
   await connectDB();
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`Lumina API listening on port ${PORT}`);
+  });
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(
+        `Port ${PORT} is already in use. Stop the other Dall-E dev server or set a different PORT before starting nodemon.`,
+      );
+      process.exit(1);
+    }
+
+    throw error;
   });
 }
 

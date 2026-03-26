@@ -206,7 +206,7 @@ function MaterialIcon({ name, className = '', fill = false }) {
 
 function TopNavigation({ activeView, navigate }) {
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 bg-surface/60 backdrop-blur-xl shadow-nav-glow">
+    <nav className="top-header-glass fixed inset-x-0 top-0 z-50">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 md:px-8">
         <button
           type="button"

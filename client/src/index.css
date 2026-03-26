@@ -107,6 +107,40 @@ body::after {
     -webkit-backdrop-filter: blur(24px);
   }
 
+  .top-header-glass {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04)),
+      rgba(24, 21, 33, 0.72);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+      0 18px 60px rgba(98, 0, 238, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+  }
+
+  .top-header-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      rgba(205, 189, 255, 0.18),
+      rgba(141, 205, 255, 0.08) 48%,
+      rgba(255, 177, 193, 0.14)
+    );
+    opacity: 0.45;
+  }
+
+  .top-header-glass > * {
+    position: relative;
+    z-index: 1;
+  }
+
   .text-gradient {
     background-image: linear-gradient(135deg, #cdbdff 0%, #8dcdff 56%, #ffb1c1 100%);
     -webkit-background-clip: text;
